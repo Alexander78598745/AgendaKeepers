@@ -199,15 +199,19 @@
 
         // CARGA Y GUARDADO (LocalStorage)
         function loadState() {
+            // Los datos se cargan del localStorage y NUNCA se borran automáticamente
             const storedEvents = localStorage.getItem('agenda_events');
             if (storedEvents) eventsDB = JSON.parse(storedEvents);
+            
             const storedTheme = localStorage.getItem('agenda_theme');
             if (storedTheme === 'light') {
                 document.body.classList.add('light-mode');
                 document.getElementById('themeIcon').className = 'fas fa-sun';
             }
+            
             const storedView = localStorage.getItem('agenda_view');
             if (storedView) viewMode = storedView;
+            
             document.getElementById('btnWeek').classList.toggle('active', viewMode === 'week');
             document.getElementById('btnMonth').classList.toggle('active', viewMode === 'month');
         }
@@ -310,7 +314,6 @@
             }
 
             if (isMatch) {
-                // PARTIDO (FORZAR TEXTO BLANCO SIEMPRE)
                 cardStyle = 'border: 1px solid var(--atm-red); background: linear-gradient(135deg, #1C2C5B, #000);';
                 badgeHTML = `<span class="badge" style="background:var(--atm-red); font-size:0.8rem;">${event.competition || 'PARTIDO'}</span>`;
                 titleStyle = 'color: #ffffff !important;';
@@ -318,7 +321,6 @@
                 if(event.rival) displayTitle = `<span style="font-weight:400; font-size:0.9rem; color:#aaa;">VS</span> <span style="color:white;">${event.rival.toUpperCase()}</span>`;
             } 
             else if (isTournament) {
-                // TORNEO (FORZAR TEXTO BLANCO SIEMPRE)
                 cardStyle = 'border: 1px solid #f39c12; background: linear-gradient(135deg, #583e06, #111);';
                 badgeHTML = '<span class="badge" style="background:#f39c12; color:black;">TORNEO</span>';
                 titleStyle = 'color: #ffffff !important;';
@@ -345,9 +347,8 @@
             if (event.fileData) btns += `<button class="btn-ios-action primary" onclick="openFile('${event.id}')"><span>📄 Ver PDF</span></button>`;
             else btns += `<button class="btn-ios-action primary disabled"><span>📄 No PDF</span></button>`;
             
-            if(!isTournament) {
-                btns += `<button class="btn-ios-action secondary" onclick="editEvent(${event.id})"><span>✏️ Editar</span></button>`;
-            }
+            // BOTÓN EDITAR HABILITADO TAMBIÉN PARA TORNEOS
+            btns += `<button class="btn-ios-action secondary" onclick="editEvent(${event.id})"><span>✏️ Editar</span></button>`;
 
             return `
             <div class="agenda-card">
@@ -380,10 +381,10 @@
         }
         window.switchView = function(mode) {
             viewMode = mode;
-            saveState();
-            renderDates();
             document.getElementById('btnWeek').classList.toggle('active', mode === 'week');
             document.getElementById('btnMonth').classList.toggle('active', mode === 'month');
+            saveState();
+            renderDates();
         }
         window.toggleTheme = function() {
             document.body.classList.toggle('light-mode');
@@ -398,7 +399,6 @@
         document.getElementById('addBtn').onclick = () => {
             resetForm();
             modal.classList.add('open');
-            // Fechas por defecto para torneo
             const todayStr = getKeyFromDate(currentDate);
             document.getElementById('tourStart').value = todayStr;
             document.getElementById('tourEnd').value = todayStr;
@@ -436,6 +436,8 @@
                 locationRow.style.display = 'none';
                 colorSec.style.display = 'none';
             } else if (tempType === 'tournament') {
+                // Al CREAR un torneo mostramos las fechas, al EDITAR uno individual lo ocultamos
+                // (se gestiona en editEvent)
                 tourConfig.style.display = 'block';
                 timeRow.style.display = 'none';
                 colorSec.style.display = 'none';
@@ -485,6 +487,16 @@
             const typeBtn = document.querySelector(`.segment-option[data-val="${event.type}"]`);
             if(typeBtn) selectType(typeBtn);
 
+            // Ajuste especial para EDICIÓN de Torneo: Tratamos el día individualmente
+            if(event.type === 'tournament') {
+                // Ocultamos el selector de fechas para no romper la lógica multi-día
+                document.getElementById('tourConfig').style.display = 'none';
+                // Mostramos campos de texto básicos
+                document.getElementById('titleRow').style.display = 'block';
+                document.getElementById('labelTitle').innerText = "NOMBRE DEL TORNEO (ESTE DÍA)";
+                document.getElementById('locationRow').style.display = 'flex';
+            }
+
             if (event.type === 'match') {
                 document.getElementById('inputComp').value = event.competition || 'LIGA';
                 document.getElementById('inputRival').value = event.rival || '';
@@ -509,8 +521,8 @@
                 alert("Indica el rival"); return;
             }
 
-            // TORNEO MULTIDÍA
-            if (tempType === 'tournament') {
+            // LOGICA GUARDADO TORNEO MULTI-DÍA (SOLO AL CREAR NUEVO)
+            if (tempType === 'tournament' && !editingId) {
                 const startStr = document.getElementById('tourStart').value;
                 const endStr = document.getElementById('tourEnd').value;
                 if(!startStr || !endStr) { alert("Indica fechas"); return; }
@@ -523,7 +535,7 @@
                     const key = getKeyFromDate(loopDate);
                     if(!eventsDB[key]) eventsDB[key] = [];
                     eventsDB[key].push({
-                        id: sharedId + "_" + key,
+                        id: sharedId + "_" + key, // ID único
                         type: 'tournament',
                         title: document.getElementById('inputTitle').value,
                         subtitle: document.getElementById('inputSub').value || 'Ubicación Torneo',
@@ -541,7 +553,7 @@
                 return;
             }
 
-            // EVENTO NORMAL
+            // GUARDADO NORMAL (Y EDICIÓN INDIVIDUAL DE TORNEO)
             const key = getKeyFromDate(currentDate);
             if(!eventsDB[key]) eventsDB[key] = [];
 
@@ -560,6 +572,13 @@
 
             if (editingId) {
                 const idx = eventsDB[key].findIndex(e => e.id === editingId);
+                // Si editamos un torneo existente, mantenemos su estilo de torneo
+                if(eventsDB[key][idx].type === 'tournament') {
+                    eventData.type = 'tournament';
+                    eventData.colorClass = 'btn-rein';
+                    eventData.timeStart = '';
+                    eventData.timeEnd = '';
+                }
                 if (idx !== -1) eventsDB[key][idx] = { ...eventData, id: editingId };
             } else {
                 eventsDB[key].push({ ...eventData, id: Date.now() });
