@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AgendaKeepers</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#111a36">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="ESCUDO ATM.png">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="ESCUDO ATM.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="ios-header-container">
+        <div class="header-top-row">
+            <div class="brand-box">
+                <img src="ESCUDO ATM.png" alt="Escudo" class="escudo-header">
+                <div class="brand-text">
+                    <h1 class="app-title">AgendaKeepers</h1>
+                    <div class="date-info">
+                        <h2 id="currentMonthLabel">CARGANDO...</h2>
+                        <span class="badge-week" id="currentWeekLabel">...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="right-controls">
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-row">
+            <div class="nav-arrows">
+                <button class="nav-btn" onclick="changeDate(-1)"><i class="fas fa-chevron-left"></i></button>
+                <button class="nav-btn" onclick="changeDate(1)"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="view-switcher">
+                <div id="btnWeek" class="switch-item active" onclick="switchView('week')">Semana</div>
+                <div id="btnMonth" class="switch-item" onclick="switchView('month')">Mes</div>
+            </div>
+        </div>
+        
+        <div id="datesContainer" class="ios-date-strip"></div>
+    </div>
+
+    <main class="agenda-feed"></main>
+
+    <div class="floating-nav">
+        <button id="addBtn" class="active">+</button>
+    </div>
+
+    <div id="newSessionModal" class="ios-modal-overlay">
+        <div class="ios-sheet">
+            <div class="sheet-header">
+                <div class="sheet-handle"></div>
+                <div class="sheet-controls">
+                    <button class="btn-text cancel" onclick="closeModal()">Cancelar</button>
+                    <span class="sheet-title" id="modalTitle">Nueva Actividad</span>
+                    <button class="btn-text save" onclick="saveSession()">Guardar</button>
+                </div>
+            </div>
+
+            <div class="sheet-body">
+                <label class="input-label">TIPO DE ACTIVIDAD</label>
+                <div class="segment-control-scroll">
+                    <div class="segment-option active" data-val="training" onclick="selectType(this)">⚽️ Entreno</div>
+                    <div class="segment-option" data-val="match" onclick="selectType(this)"><i class="fas fa-landmark"></i> Partido</div>
+                    <div class="segment-option" data-val="tournament" onclick="selectType(this)">🏆 Torneo</div>
+                    <div class="segment-option" data-val="gym" onclick="selectType(this)">💪 Gym</div>
+                    <div class="segment-option" data-val="meeting" onclick="selectType(this)">🤝 Reunión</div>
+                </div>
+
+                <div id="matchConfig" style="display:none; margin-bottom: 15px; background: rgba(128,128,128,0.1); padding: 15px; border-radius: 12px;">
+                    <label class="input-label" style="color: var(--atm-red);">DATOS DEL ENCUENTRO</label>
+                    <div class="row">
+                        <div style="width: 40%;">
+                            <label class="input-label">COMPETICIÓN</label>
+                            <select id="inputComp" class="ios-input" style="padding: 14px;">
+                                <option value="LIGA">LIGA</option>
+                                <option value="TORNEO">TORNEO</option>
+                                <option value="AMISTOSO">AMISTOSO</option>
+                                <option value="COPA">COPA</option>
+                            </select>
+                        </div>
+                        <div style="width: 60%;">
+                            <label class="input-label">RIVAL</label>
+                            <input type="text" id="inputRival" placeholder="Ej. Real Madrid" class="ios-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tourConfig" style="display:none; margin-bottom: 15px; background: rgba(243, 156, 18, 0.1); padding: 15px; border-radius: 12px; border: 1px solid rgba(243, 156, 18, 0.3);">
+                    <label class="input-label" style="color: #f39c12;">DURACIÓN DEL TORNEO</label>
+                    <div class="row">
+                        <div class="full-width">
+                            <label class="input-label">DESDE EL</label>
+                            <input type="date" id="tourStart" class="ios-input">
+                        </div>
+                        <div class="full-width">
+                            <label class="input-label">HASTA EL</label>
+                            <input type="date" id="tourEnd" class="ios-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="titleRow">
+                    <label class="input-label" id="labelTitle">TÍTULO SESIÓN</label>
+                    <input type="text" id="inputTitle" placeholder="Ej. Velocidad de Reacción" class="ios-input">
+                </div>
+
+                <label class="input-label">LOGÍSTICA</label>
+                <div id="locationRow" class="row">
+                    <div class="full-width">
+                        <input type="text" id="inputSub" placeholder="Ubicación (Campo/Estadio)" class="ios-input">
+                    </div>
+                    <div class="full-width">
+                        <input type="text" id="inputTeam" placeholder="Mi Equipo (ej. Juvenil A)" class="ios-input">
+                    </div>
+                </div>
+
+                <div id="meetingConfig" style="display:none; margin-bottom:15px;">
+                    <div class="row">
+                        <button class="btn-toggle active" id="btnPresencial" onclick="toggleMeetingMode('presencial')">Presencial</button>
+                        <button class="btn-toggle" id="btnOnline" onclick="toggleMeetingMode('online')">Online</button>
+                    </div>
+                    <input type="text" id="inputLink" placeholder="Enlace videollamada" class="ios-input" style="display:none; margin-top:10px;">
+                </div>
+
+                <div class="row" id="timeRow">
+                    <div class="full-width">
+                        <label class="input-label">HORA INICIO</label>
+                        <input type="time" id="inputStart" value="10:00" class="ios-input">
+                    </div>
+                    <div class="full-width">
+                        <label class="input-label">HORA FIN</label>
+                        <input type="time" id="inputEnd" value="11:30" class="ios-input">
+                    </div>
+                </div>
+
+                <label class="input-label">ARCHIVO ADJUNTO</label>
+                <div class="file-upload-box">
+                    <input type="file" id="inputFile" accept="application/pdf, image/*" onchange="handleFileSelect(this)">
+                    <div class="file-placeholder">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span id="fileNameDisplay">Subir PDF / Imagen</span>
+                    </div>
+                </div>
+
+                <div id="colorSection">
+                    <label class="input-label">ENFOQUE</label>
+                    <div class="color-picker-row">
+                        <div class="color-dot selected" style="background: var(--col-of);" data-class="btn-of" onclick="selectColor(this)"></div>
+                        <div class="color-dot" style="background: var(--col-def);" data-class="btn-def" onclick="selectColor(this)"></div>
+                        <div class="color-dot" style="background: var(--col-tac);" data-class="btn-tac" onclick="selectColor(this)"></div>
+                        <div class="color-dot" style="background: var(--col-rein);" data-class="btn-rein" onclick="selectColor(this)"></div>
+                    </div>
+                </div>
+                <div style="height: 100px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- PWA ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('Error SW:', err));
+            });
+        }
+
+        // --- UTILIDADES ---
+        function getKeyFromDate(date) { return date.toISOString().split('T')[0]; }
+        function getStartOfWeek(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+
+        // --- ESTADO ---
+        let currentDate = new Date();
+        let viewMode = 'week';
+        let eventsDB = {}; 
+        let editingId = null;
+        let tempFileBase64 = null;
+        let tempType = 'training';
+        let tempColor = 'btn-of';
+
+        function loadState() {
+            const storedEvents = localStorage.getItem('agenda_events');
+            if (storedEvents) eventsDB = JSON.parse(storedEvents);
+            const storedTheme = localStorage.getItem('agenda_theme');
+            if (storedTheme === 'light') {
+                document.body.classList.add('light-mode');
+                document.getElementById('themeIcon').className = 'fas fa-sun';
+            }
+            const storedView = localStorage.getItem('agenda_view');
+            if (storedView) viewMode = storedView;
+            document.getElementById('btnWeek').classList.toggle('active', viewMode === 'week');
+            document.getElementById('btnMonth').classList.toggle('active', viewMode === 'month');
+        }
+
+        function saveState() {
+            localStorage.setItem('agenda_events', JSON.stringify(eventsDB));
+            localStorage.setItem('agenda_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+            localStorage.setItem('agenda_view', viewMode);
+        }
+
+        // --- RENDERIZADO ---
+        function updateHeader() {
+            const monthNames = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+            document.getElementById('currentMonthLabel').innerText = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+            const onejan = new Date(currentDate.getFullYear(), 0, 1);
+            const weekNum = Math.ceil((((currentDate - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+            document.getElementById('currentWeekLabel').innerText = `SEMANA ${weekNum}`;
+        }
+
+        function renderDates() {
+            const container = document.getElementById('datesContainer');
+            container.innerHTML = '';
+            let daysToRender = [];
+            
+            if (viewMode === 'week') {
+                let startDay = getStartOfWeek(new Date(currentDate));
+                for (let i = 0; i < 7; i++) {
+                    let d = new Date(startDay);
+                    d.setDate(startDay.getDate() + i);
+                    daysToRender.push(d);
+                }
+                container.style.justifyContent = 'center';
+            } else {
+                let year = currentDate.getFullYear();
+                let month = currentDate.getMonth();
+                let daysInMonth = new Date(year, month + 1, 0).getDate();
+                for (let i = 1; i <= daysInMonth; i++) {
+                    daysToRender.push(new Date(year, month, i));
+                }
+                container.style.justifyContent = 'flex-start';
+            }
+
+            const daysNames = ['DOM','LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
+
+            daysToRender.forEach(date => {
+                let dayKey = getKeyFromDate(date);
+                let isSelected = dayKey === getKeyFromDate(currentDate);
+                let hasEvents = eventsDB[dayKey] && eventsDB[dayKey].length > 0;
+                let dayName = daysNames[date.getDay()];
+
+                let div = document.createElement('div');
+                div.className = `date-item ${isSelected ? 'active' : ''}`;
+                div.onclick = function() { selectDate(date); };
+                div.innerHTML = `
+                    <span class="day-name">${dayName}</span>
+                    <span class="day-num">${date.getDate()}</span>
+                    ${hasEvents ? '<div class="dot-indicator"></div>' : ''}
+                `;
+                container.appendChild(div);
+                if(isSelected && viewMode === 'month') {
+                    setTimeout(() => div.scrollIntoView({behavior: 'smooth', inline: 'center', block: 'nearest'}), 100);
+                }
+            });
+        }
+
+        function renderEventsList() {
+            const container = document.querySelector('.agenda-feed');
+            const key = getKeyFromDate(currentDate);
+            const events = eventsDB[key] || [];
+
+            container.innerHTML = '';
+            container.classList.add('loading');
+            setTimeout(() => {
+                container.classList.remove('loading');
+                if (events.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <span class="empty-icon">🏆</span>
+                            <h3>Agenda Libre</h3>
+                            <p>Toca el + para añadir sesión.</p>
+                        </div>`;
+                } else {
+                    events.forEach(ev => container.innerHTML += createCardHTML(ev));
+                }
+            }, 50);
+        }
+
+        function createCardHTML(event) {
+            const isMatch = event.type === 'match';
+            const isTournament = event.type === 'tournament';
+            
+            let displayTitle = event.title;
+            let displaySub = event.subtitle || 'Ciudad Deportiva';
+            let badgeHTML = '';
+            let cardStyle = '';
+            let titleStyle = '';
+            let subStyle = ''; 
+            
+            // IZQUIERDA: Hora o Texto Torneo
+            let timeLeft = `<span class="time-start">${event.timeStart}</span><span class="time-end">${event.timeEnd}</span>`;
+            if (isTournament) {
+                timeLeft = `<span class="time-start" style="font-size:0.6rem; text-transform:uppercase;">DÍA</span><span class="time-end" style="font-weight:800; color:#f39c12;">TORNEO</span>`;
+            }
+
+            if (isMatch) {
+                cardStyle = 'border: 1px solid var(--atm-red); background: linear-gradient(135deg, #1C2C5B, #000);';
+                badgeHTML = `<span class="badge" style="background:var(--atm-red); font-size:0.8rem;">${event.competition || 'PARTIDO'}</span>`;
+                titleStyle = 'color: #ffffff !important;';
+                subStyle = 'color: #cccccc !important;';
+                if(event.rival) displayTitle = `<span style="font-weight:400; font-size:0.9rem; color:#aaa;">VS</span> <span style="color:white;">${event.rival.toUpperCase()}</span>`;
+            } 
+            else if (isTournament) {
+                // ESTILO TORNEO
+                cardStyle = 'border: 1px solid #f39c12; background: linear-gradient(135deg, #583e06, #111);';
+                badgeHTML = '<span class="badge" style="background:#f39c12; color:black;">TORNEO</span>';
+                titleStyle = 'color: #ffffff !important;';
+                subStyle = 'color: #f1c40f !important; font-weight:600;';
+            }
+            else if (event.type === 'meeting') {
+                cardStyle = 'border-left: 4px solid #3498db; background: var(--bg-card);';
+                badgeHTML = '<span class="badge" style="background:#3498db">REUNIÓN</span>';
+            } 
+            else {
+                let c = 'var(--atm-red)';
+                if(event.colorClass.includes('of')) c = 'var(--col-of)';
+                if(event.colorClass.includes('def')) c = 'var(--col-def)';
+                if(event.colorClass.includes('tac')) c = 'var(--col-tac)';
+                badgeHTML = `<span class="badge" style="background:${c}">ENTRENO</span>`;
+            }
+
+            if (event.team) {
+                let teamColor = (isMatch || isTournament) ? '#ffffff' : 'var(--text-main)';
+                displaySub += ` • <span style="color:${teamColor}; font-weight:600;">${event.team}</span>`;
+            }
+
+            let btns = '';
+            if (event.fileData) btns += `<button class="btn-ios-action primary" onclick="openFile('${event.id}')"><span>📄 Ver PDF</span></button>`;
+            else btns += `<button class="btn-ios-action primary disabled"><span>📄 No PDF</span></button>`;
+            // Ocultar botón editar en multi-día para simplificar (o permitir editar solo este día)
+            if(!isTournament) {
+                btns += `<button class="btn-ios-action secondary" onclick="editEvent(${event.id})"><span>✏️ Editar</span></button>`;
+            }
+
+            return `
+            <div class="agenda-card">
+                <div class="time-col">
+                    ${timeLeft}
+                    <div class="vertical-line"></div>
+                </div>
+                <div class="card-details modern-card" style="${cardStyle}">
+                    <div class="card-header-row">
+                        <div>${badgeHTML}</div>
+                    </div>
+                    <h3 class="card-title" style="${titleStyle}">${displayTitle}</h3>
+                    <p class="card-subtitle" style="${subStyle}">${displaySub}</p>
+                    <div class="card-actions">${btns}</div>
+                </div>
+            </div>`;
+        }
+
+        // --- INTERACCIONES ---
+        window.selectDate = function(date) {
+            currentDate = date;
+            updateHeader();
+            renderDates();
+            renderEventsList();
+        }
+        window.changeDate = function(dir) {
+            if (viewMode === 'week') currentDate.setDate(currentDate.getDate() + (dir * 7));
+            else currentDate.setMonth(currentDate.getMonth() + dir);
+            selectDate(currentDate);
+        }
+        window.switchView = function(mode) {
+            viewMode = mode;
+            document.getElementById('btnWeek').classList.toggle('active', mode === 'week');
+            document.getElementById('btnMonth').classList.toggle('active', mode === 'month');
+            saveState();
+            renderDates();
+        }
+        window.toggleTheme = function() {
+            document.body.classList.toggle('light-mode');
+            const icon = document.getElementById('themeIcon');
+            icon.className = document.body.classList.contains('light-mode') ? 'fas fa-sun' : 'fas fa-moon';
+            saveState();
+        }
+
+        // --- FORMULARIO ---
+        const modal = document.getElementById('newSessionModal');
+
+        document.getElementById('addBtn').onclick = () => {
+            resetForm();
+            modal.classList.add('open');
+            // Pre-rellenar fechas de torneo con la fecha seleccionada
+            const todayStr = getKeyFromDate(currentDate);
+            document.getElementById('tourStart').value = todayStr;
+            document.getElementById('tourEnd').value = todayStr;
+        };
+        window.closeModal = () => modal.classList.remove('open');
+
+        window.selectType = function(el) {
+            document.querySelectorAll('.segment-option').forEach(o => o.classList.remove('active'));
+            el.classList.add('active');
+            tempType = el.getAttribute('data-val');
+
+            const matchConfig = document.getElementById('matchConfig');
+            const tourConfig = document.getElementById('tourConfig'); // NUEVO
+            const titleRow = document.getElementById('titleRow');
+            const meetConfig = document.getElementById('meetingConfig');
+            const colorSec = document.getElementById('colorSection');
+            const locationRow = document.getElementById('locationRow');
+            const timeRow = document.getElementById('timeRow');
+
+            // Reset
+            matchConfig.style.display = 'none';
+            tourConfig.style.display = 'none';
+            titleRow.style.display = 'block';
+            meetConfig.style.display = 'none';
+            colorSec.style.display = 'block';
+            locationRow.style.display = 'flex';
+            timeRow.style.display = 'flex';
+            document.getElementById('labelTitle').innerText = "TÍTULO SESIÓN";
+
+            if (tempType === 'match') {
+                matchConfig.style.display = 'block';
+                titleRow.style.display = 'none';
+                colorSec.style.display = 'none';
+            } else if (tempType === 'meeting') {
+                meetConfig.style.display = 'block';
+                locationRow.style.display = 'none';
+                colorSec.style.display = 'none';
+            } else if (tempType === 'tournament') {
+                // LOGICA TORNEO
+                tourConfig.style.display = 'block'; // Mostrar fechas
+                timeRow.style.display = 'none'; // Ocultar horas
+                colorSec.style.display = 'none'; // Ocultar colores
+                document.getElementById('labelTitle').innerText = "NOMBRE DEL TORNEO";
+            }
+        }
+
+        window.selectColor = function(el) {
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+            el.classList.add('selected');
+            tempColor = el.getAttribute('data-class');
+        }
+
+        window.handleFileSelect = function(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempFileBase64 = e.target.result;
+                    document.getElementById('fileNameDisplay').innerText = "Archivo Listo";
+                    document.getElementById('fileNameDisplay').style.color = "#00ff88";
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        window.openFile = function(eventId) {
+            const key = getKeyFromDate(currentDate);
+            const event = eventsDB[key].find(e => e.id == eventId);
+            if(event && event.fileData) {
+                const win = window.open();
+                win.document.write('<iframe src="' + event.fileData + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
+            } else alert("Error al abrir archivo");
+        }
+
+        window.editEvent = function(id) {
+            const key = getKeyFromDate(currentDate);
+            const event = eventsDB[key].find(e => e.id === id);
+            if (!event) return;
+
+            document.getElementById('inputSub').value = event.subtitle || '';
+            document.getElementById('inputTeam').value = event.team || '';
+            document.getElementById('inputStart').value = event.timeStart;
+            document.getElementById('inputEnd').value = event.timeEnd;
+            document.getElementById('inputTitle').value = event.title || '';
+
+            const typeBtn = document.querySelector(`.segment-option[data-val="${event.type}"]`);
+            if(typeBtn) selectType(typeBtn);
+
+            if (event.type === 'match') {
+                document.getElementById('inputComp').value = event.competition || 'LIGA';
+                document.getElementById('inputRival').value = event.rival || '';
+            }
+
+            tempFileBase64 = event.fileData;
+            if(tempFileBase64) {
+                document.getElementById('fileNameDisplay').innerText = "Archivo Mantenido";
+                document.getElementById('fileNameDisplay').style.color = "#00ff88";
+            }
+
+            editingId = id;
+            document.getElementById('modalTitle').innerText = "Editar Actividad";
+            modal.classList.add('open');
+        }
+
+        window.saveSession = function() {
+            if (tempType !== 'match' && !document.getElementById('inputTitle').value) {
+                alert("Ponle un título"); return;
+            }
+            if (tempType === 'match' && !document.getElementById('inputRival').value) {
+                alert("Indica el rival"); return;
+            }
+
+            // LOGICA GUARDADO TORNEO (MULTI-DÍA)
+            if (tempType === 'tournament') {
+                const startStr = document.getElementById('tourStart').value;
+                const endStr = document.getElementById('tourEnd').value;
+                
+                if(!startStr || !endStr) { alert("Indica fechas de inicio y fin"); return; }
+                
+                let loopDate = new Date(startStr);
+                const endDate = new Date(endStr);
+                
+                const sharedId = Date.now(); // Mismo ID para agrupar visualmente si quisiéramos
+
+                // BUCLE PARA AÑADIR A TODOS LOS DÍAS
+                while (loopDate <= endDate) {
+                    const key = getKeyFromDate(loopDate);
+                    if(!eventsDB[key]) eventsDB[key] = [];
+                    
+                    eventsDB[key].push({
+                        id: sharedId + "_" + key, // ID único por día
+                        type: 'tournament',
+                        title: document.getElementById('inputTitle').value,
+                        subtitle: document.getElementById('inputSub').value || 'Ubicación Torneo',
+                        team: document.getElementById('inputTeam').value || '',
+                        timeStart: '', // Sin hora
+                        timeEnd: '',
+                        colorClass: 'btn-rein', // Color dorado
+                        fileData: tempFileBase64
+                    });
+                    
+                    // Avanzar día
+                    loopDate.setDate(loopDate.getDate() + 1);
+                }
+                
+                // Guardar y Salir
+                saveState();
+                closeModal();
+                selectDate(new Date(startStr)); // Ir al día de inicio
+                resetForm();
+                return;
+            }
+
+            // GUARDADO NORMAL (1 DÍA)
+            const key = getKeyFromDate(currentDate);
+            if(!eventsDB[key]) eventsDB[key] = [];
+
+            const eventData = {
+                type: tempType,
+                title: document.getElementById('inputTitle').value,
+                subtitle: document.getElementById('inputSub').value || 'Ciudad Deportiva',
+                team: document.getElementById('inputTeam').value || '',
+                timeStart: document.getElementById('inputStart').value,
+                timeEnd: document.getElementById('inputEnd').value,
+                colorClass: tempColor,
+                fileData: tempFileBase64,
+                competition: document.getElementById('inputComp').value,
+                rival: document.getElementById('inputRival').value
+            };
+
+            if (editingId) {
+                const idx = eventsDB[key].findIndex(e => e.id === editingId);
+                if (idx !== -1) eventsDB[key][idx] = { ...eventData, id: editingId };
+            } else {
+                eventsDB[key].push({ ...eventData, id: Date.now() });
+            }
+
+            eventsDB[key].sort((a,b) => a.timeStart.localeCompare(b.timeStart));
+            saveState();
+            closeModal();
+            renderEventsList();
+            renderDates();
+            resetForm();
+        }
+
+        function resetForm() {
+            document.getElementById('inputTitle').value = "";
+            document.getElementById('inputSub').value = "";
+            document.getElementById('inputTeam').value = "";
+            document.getElementById('inputRival').value = "";
+            document.getElementById('fileNameDisplay').innerText = "Adjuntar Sesión";
+            document.getElementById('fileNameDisplay').style.color = "inherit";
+            document.getElementById('inputFile').value = "";
+            tempFileBase64 = null;
+            editingId = null;
+        }
+
+        loadState();
+        updateHeader();
+        renderDates();
+        renderEventsList();
+    </script>
+</body>
+</html>
