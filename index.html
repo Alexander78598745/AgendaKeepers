@@ -118,22 +118,21 @@
                     <input type="text" id="inputTitle" placeholder="Ej. Velocidad de Reacción" class="ios-input">
                 </div>
 
-                <label class="input-label">LOGÍSTICA</label>
-                <div id="locationRow" class="row">
-                    <div class="full-width">
-                        <input type="text" id="inputSub" placeholder="Ubicación (Campo/Estadio)" class="ios-input">
-                    </div>
-                    <div class="full-width">
-                        <input type="text" id="inputTeam" placeholder="Mi Equipo (ej. Juvenil A)" class="ios-input">
-                    </div>
-                </div>
-
                 <div id="meetingConfig" style="display:none; margin-bottom:15px;">
                     <div class="row">
                         <button class="btn-toggle active" id="btnPresencial" onclick="toggleMeetingMode('presencial')">Presencial</button>
                         <button class="btn-toggle" id="btnOnline" onclick="toggleMeetingMode('online')">Online</button>
                     </div>
-                    <input type="text" id="inputLink" placeholder="Enlace videollamada" class="ios-input" style="display:none; margin-top:10px;">
+                    <input type="text" id="inputLink" placeholder="Enlace (Zoom, Teams, Meet...)" class="ios-input" style="display:none; margin-top:10px;">
+                </div>
+
+                <div id="locationRow" class="row">
+                    <div class="full-width">
+                        <input type="text" id="inputSub" placeholder="Ubicación (Campo/Sala)" class="ios-input">
+                    </div>
+                    <div class="full-width">
+                        <input type="text" id="inputTeam" placeholder="Mi Equipo (ej. Juvenil A)" class="ios-input">
+                    </div>
                 </div>
 
                 <div class="row" id="timeRow">
@@ -171,22 +170,20 @@
     </div>
 
     <script>
-        // --- REGISTRO SERVICE WORKER (PWA) ---
+        // PWA REGISTRO
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').catch(err => console.log('Error SW:', err));
             });
         }
 
-        // --- UTILIDADES ---
+        // UTILIDADES
         function getKeyFromDate(date) { 
-            // Crear fecha local segura evitando UTC
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
-        
         function getStartOfWeek(date) {
             const d = new Date(date);
             const day = d.getDay();
@@ -194,7 +191,7 @@
             return new Date(d.setDate(diff));
         }
 
-        // --- ESTADO ---
+        // ESTADO
         let currentDate = new Date();
         let viewMode = 'week';
         let eventsDB = {}; 
@@ -202,21 +199,19 @@
         let tempFileBase64 = null;
         let tempType = 'training';
         let tempColor = 'btn-of';
+        let meetingMode = 'presencial'; // Estado para reunión
 
-        // CARGA Y GUARDADO (LocalStorage)
+        // CARGA
         function loadState() {
             const storedEvents = localStorage.getItem('agenda_events');
             if (storedEvents) eventsDB = JSON.parse(storedEvents);
-            
             const storedTheme = localStorage.getItem('agenda_theme');
             if (storedTheme === 'light') {
                 document.body.classList.add('light-mode');
                 document.getElementById('themeIcon').className = 'fas fa-sun';
             }
-            
             const storedView = localStorage.getItem('agenda_view');
             if (storedView) viewMode = storedView;
-            
             document.getElementById('btnWeek').classList.toggle('active', viewMode === 'week');
             document.getElementById('btnMonth').classList.toggle('active', viewMode === 'month');
         }
@@ -227,7 +222,7 @@
             localStorage.setItem('agenda_view', viewMode);
         }
 
-        // --- RENDERIZADO ---
+        // RENDERIZADO
         function updateHeader() {
             const monthNames = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
             document.getElementById('currentMonthLabel').innerText = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
@@ -274,7 +269,6 @@
                 ${hasEvents ? '<div class="dot-indicator"></div>' : ''}
             `;
             container.appendChild(div);
-            
             if(isSelected && viewMode === 'month') {
                 setTimeout(() => div.scrollIntoView({behavior: 'smooth', inline: 'center', block: 'nearest'}), 100);
             }
@@ -352,7 +346,7 @@
             if (event.fileData) btns += `<button class="btn-ios-action primary" onclick="openFile('${event.id}')"><span>📄 Ver PDF</span></button>`;
             else btns += `<button class="btn-ios-action primary disabled"><span>📄 No PDF</span></button>`;
             
-            // CORRECCIÓN: Botón Editar con COMILLAS para IDs tipo string
+            // Botón editar con ID entre comillas
             btns += `<button class="btn-ios-action secondary" onclick="editEvent('${event.id}')"><span>✏️ Editar</span></button>`;
 
             return `
@@ -410,6 +404,7 @@
         };
         window.closeModal = () => modal.classList.remove('open');
 
+        // GESTIÓN DE TIPO Y VISIBILIDAD CAMPOS
         window.selectType = function(el) {
             document.querySelectorAll('.segment-option').forEach(o => o.classList.remove('active'));
             el.classList.add('active');
@@ -438,13 +433,32 @@
                 colorSec.style.display = 'none';
             } else if (tempType === 'meeting') {
                 meetConfig.style.display = 'block';
-                locationRow.style.display = 'none';
                 colorSec.style.display = 'none';
+                toggleMeetingMode('presencial'); // Inicializar reunión presencial
             } else if (tempType === 'tournament') {
                 tourConfig.style.display = 'block';
                 timeRow.style.display = 'none';
                 colorSec.style.display = 'none';
                 document.getElementById('labelTitle').innerText = "NOMBRE DEL TORNEO";
+            }
+        }
+
+        // TOGGLE REUNIÓN (CORREGIDO)
+        window.toggleMeetingMode = function(mode) {
+            meetingMode = mode;
+            document.getElementById('btnPresencial').classList.toggle('active', mode === 'presencial');
+            document.getElementById('btnOnline').classList.toggle('active', mode === 'online');
+            
+            const linkInput = document.getElementById('inputLink');
+            const locationRow = document.getElementById('locationRow');
+
+            if (mode === 'online') {
+                linkInput.style.display = 'block';
+                locationRow.style.display = 'none'; // Online no necesita sitio físico
+            } else {
+                linkInput.style.display = 'none';
+                locationRow.style.display = 'flex'; // Presencial sí necesita sitio
+                document.getElementById('inputSub').placeholder = "Sala / Despacho";
             }
         }
 
@@ -469,7 +483,6 @@
 
         window.openFile = function(eventId) {
             const key = getKeyFromDate(currentDate);
-            // == para permitir comparación string/número
             const event = eventsDB[key].find(e => e.id == eventId);
             if(event && event.fileData) {
                 const win = window.open();
@@ -479,23 +492,22 @@
 
         window.editEvent = function(id) {
             const key = getKeyFromDate(currentDate);
-            // Búsqueda robusta (comparar como string)
             const event = eventsDB[key].find(e => e.id == id);
-            
             if (!event) return;
 
+            // Rellenar datos
             document.getElementById('inputSub').value = event.subtitle || '';
             document.getElementById('inputTeam').value = event.team || '';
             document.getElementById('inputStart').value = event.timeStart;
             document.getElementById('inputEnd').value = event.timeEnd;
             document.getElementById('inputTitle').value = event.title || '';
 
+            // Seleccionar tipo
             const typeBtn = document.querySelector(`.segment-option[data-val="${event.type}"]`);
             if(typeBtn) selectType(typeBtn);
 
-            // EDICIÓN DE TORNEO (Día individual)
+            // Ajuste Editar Torneo (Ocultar fechas globales, mostrar edición local)
             if(event.type === 'tournament') {
-                // Ocultar rango fechas (ya que editamos un solo día)
                 document.getElementById('tourConfig').style.display = 'none';
                 document.getElementById('titleRow').style.display = 'block';
                 document.getElementById('labelTitle').innerText = "NOMBRE DEL TORNEO";
@@ -505,6 +517,17 @@
             if (event.type === 'match') {
                 document.getElementById('inputComp').value = event.competition || 'LIGA';
                 document.getElementById('inputRival').value = event.rival || '';
+            }
+
+            // Ajuste Editar Reunión
+            if (event.type === 'meeting') {
+                // Detectar si era online o presencial
+                if (event.link) {
+                    toggleMeetingMode('online');
+                    document.getElementById('inputLink').value = event.link;
+                } else {
+                    toggleMeetingMode('presencial');
+                }
             }
 
             tempFileBase64 = event.fileData;
@@ -519,6 +542,7 @@
         }
 
         window.saveSession = function() {
+            // Validaciones
             if (tempType !== 'match' && !document.getElementById('inputTitle').value) {
                 alert("Ponle un título"); return;
             }
@@ -526,28 +550,23 @@
                 alert("Indica el rival"); return;
             }
 
-            // CREAR TORNEO MULTI-DÍA (Solo si es NUEVO)
+            // CASO TORNEO MULTI-DÍA (SOLO CREACIÓN)
             if (tempType === 'tournament' && !editingId) {
                 const startStr = document.getElementById('tourStart').value;
                 const endStr = document.getElementById('tourEnd').value;
+                if(!startStr || !endStr) { alert("Indica fechas"); return; }
                 
-                if(!startStr || !endStr) { alert("Indica fechas de inicio y fin"); return; }
-                
-                // CORRECCIÓN FECHAS (Split manual)
                 const sParts = startStr.split('-');
                 const eParts = endStr.split('-');
-                // Crear fechas locales (Mes es 0-index)
                 let loopDate = new Date(sParts[0], sParts[1]-1, sParts[2]);
                 const endDate = new Date(eParts[0], eParts[1]-1, eParts[2]);
-
                 const sharedId = Date.now();
 
                 while (loopDate <= endDate) {
                     const key = getKeyFromDate(loopDate);
                     if(!eventsDB[key]) eventsDB[key] = [];
-                    
                     eventsDB[key].push({
-                        id: sharedId + "_" + key, // ID STRING
+                        id: sharedId + "_" + key,
                         type: 'tournament',
                         title: document.getElementById('inputTitle').value,
                         subtitle: document.getElementById('inputSub').value || 'Ubicación Torneo',
@@ -556,10 +575,8 @@
                         colorClass: 'btn-rein',
                         fileData: tempFileBase64
                     });
-                    
                     loopDate.setDate(loopDate.getDate() + 1);
                 }
-                
                 saveState();
                 closeModal();
                 selectDate(new Date(sParts[0], sParts[1]-1, sParts[2]));
@@ -567,14 +584,26 @@
                 return;
             }
 
-            // GUARDADO NORMAL / EDICIÓN
+            // GUARDADO ESTÁNDAR
             const key = getKeyFromDate(currentDate);
             if(!eventsDB[key]) eventsDB[key] = [];
+
+            // Preparar Subtítulo / Ubicación / Link
+            let finalSubtitle = document.getElementById('inputSub').value || 'Ciudad Deportiva';
+            let finalLink = null;
+
+            if (tempType === 'meeting') {
+                if (meetingMode === 'online') {
+                    finalSubtitle = "Online";
+                    finalLink = document.getElementById('inputLink').value || "#";
+                }
+            }
 
             const eventData = {
                 type: tempType,
                 title: document.getElementById('inputTitle').value,
-                subtitle: document.getElementById('inputSub').value || 'Ciudad Deportiva',
+                subtitle: finalSubtitle,
+                link: finalLink,
                 team: document.getElementById('inputTeam').value || '',
                 timeStart: document.getElementById('inputStart').value,
                 timeEnd: document.getElementById('inputEnd').value,
@@ -585,9 +614,9 @@
             };
 
             if (editingId) {
-                // Buscar por ID relajado (==)
                 const idx = eventsDB[key].findIndex(e => e.id == editingId);
                 if (idx !== -1) {
+                    // Mantener propiedades especiales de torneo
                     if(eventsDB[key][idx].type === 'tournament') {
                         eventData.type = 'tournament';
                         eventData.colorClass = 'btn-rein'; 
@@ -613,6 +642,7 @@
             document.getElementById('inputSub').value = "";
             document.getElementById('inputTeam').value = "";
             document.getElementById('inputRival').value = "";
+            document.getElementById('inputLink').value = "";
             document.getElementById('fileNameDisplay').innerText = "Adjuntar Sesión";
             document.getElementById('fileNameDisplay').style.color = "inherit";
             document.getElementById('inputFile').value = "";
