@@ -35,7 +35,7 @@
             <div class="right-controls-group">
                 <div id="liveWeather" class="live-weather-badge" style="display:none;">
                     <span id="liveTemp">--°</span>
-                    <i id="liveIcon" class="fas fa-spinner fa-spin"></i>
+                    <i id="liveIcon" class="fas fa-spinner"></i>
                 </div>
 
                 <div class="right-buttons">
@@ -70,7 +70,7 @@
     </div>
 
     <div id="settingsModal" class="ios-modal-overlay">
-        <div class="ios-sheet">
+        <div class="ios-sheet settings-sheet">
             <div class="sheet-header">
                 <div class="sheet-handle"></div>
                 <div class="sheet-controls">
@@ -232,8 +232,31 @@
             window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
         }
 
-        // --- CLIMA AUTOMÁTICO ---
+        // --- GESTIÓN CLIMA AUTOMÁTICO CON CACHÉ ---
+        function updateWeatherUI(temp, code) {
+            // Mapeo iconos
+            let iconClass = 'fa-sun';
+            if (code > 3) iconClass = 'fa-cloud';
+            if (code > 50) iconClass = 'fa-cloud-showers-heavy';
+            if (code > 70) iconClass = 'fa-snowflake';
+
+            const widget = document.getElementById('liveWeather');
+            document.getElementById('liveTemp').innerText = `${temp}°`;
+            document.getElementById('liveIcon').className = `fas ${iconClass}`;
+            widget.style.display = 'flex';
+        }
+
         function initLiveWeather() {
+            // 1. CARGAR CACHÉ INMEDIATAMENTE (Para que no parpadee)
+            const cachedWeather = localStorage.getItem('agenda_live_weather');
+            if (cachedWeather) {
+                try {
+                    const data = JSON.parse(cachedWeather);
+                    updateWeatherUI(data.temp, data.code);
+                } catch(e) {}
+            }
+
+            // 2. ACTUALIZAR EN SEGUNDO PLANO
             if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(async (position) => {
                     const lat = position.coords.latitude;
@@ -246,14 +269,11 @@
                         const temp = Math.round(data.current_weather.temperature);
                         const code = data.current_weather.weathercode;
                         
-                        let iconClass = 'fa-sun';
-                        if (code > 3) iconClass = 'fa-cloud';
-                        if (code > 50) iconClass = 'fa-cloud-showers-heavy';
-                        if (code > 70) iconClass = 'fa-snowflake';
+                        // Actualizar UI
+                        updateWeatherUI(temp, code);
                         
-                        document.getElementById('liveTemp').innerText = `${temp}°`;
-                        document.getElementById('liveIcon').className = `fas ${iconClass}`;
-                        document.getElementById('liveWeather').style.display = 'flex';
+                        // Guardar en Caché
+                        localStorage.setItem('agenda_live_weather', JSON.stringify({ temp: temp, code: code }));
                         
                     } catch (error) { console.log("Error clima:", error); }
                 });
