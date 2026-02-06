@@ -26,25 +26,37 @@ body.light-mode {
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; -webkit-tap-highlight-color: transparent; }
 
 body { 
-    background-color: var(--bg-body); color: var(--text-main); 
-    padding-bottom: 110px; transition: background 0.3s, color 0.3s;
+    /* FONDO VIVO ANIMADO */
+    background: linear-gradient(-45deg, #111a36, #1C2C5B, #0b1124, #1a2542);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+    color: var(--text-main); 
+    padding-bottom: 110px; transition: color 0.3s ease;
     overscroll-behavior-y: none;
+}
+body.light-mode {
+    background: linear-gradient(-45deg, #f2f4f8, #e6e9ef, #ffffff, #dce4f2);
+}
+
+@keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 /* HEADER */
 .ios-header-container {
     position: sticky; top: 0; z-index: 100;
-    background: var(--bg-body);
+    /* Efecto Cristal */
+    background: rgba(17, 26, 54, 0.8);
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
     padding-top: 15px;
-    border-bottom: 1px solid rgba(128,128,128,0.1);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
+body.light-mode .ios-header-container { background: rgba(255,255,255,0.85); border-bottom: 1px solid rgba(0,0,0,0.05); }
 
-.header-top-row {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    padding: 0 20px; margin-bottom: 15px;
-}
-
+.header-top-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 0 20px; margin-bottom: 15px; }
 .brand-box { display: flex; align-items: center; gap: 15px; }
 .escudo-header { width: 50px; height: auto; object-fit: contain; }
 .app-title { font-size: 1.6rem; font-weight: 800; line-height: 1; letter-spacing: -1px; margin-bottom: 4px;}
@@ -75,11 +87,7 @@ body {
 }
 .switch-item.active { background: var(--bg-card); color: var(--text-main); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-.ios-date-strip {
-    display: flex; gap: 8px; padding: 0 20px 15px 20px;
-    overflow-x: auto; scrollbar-width: none;
-    justify-content: center; 
-}
+.ios-date-strip { display: flex; gap: 8px; padding: 0 20px 15px 20px; overflow-x: auto; scrollbar-width: none; justify-content: center; }
 .ios-date-strip::-webkit-scrollbar { display: none; }
 
 .date-item {
@@ -97,7 +105,7 @@ body {
 .date-item.active * { color: white !important; }
 .dot-indicator { width: 5px; height: 5px; background: var(--col-of); border-radius: 50%; margin-top: 4px; }
 
-/* FEED */
+/* FEED - CARTAS DE CRISTAL */
 .agenda-feed { padding: 20px; min-height: 50vh; }
 .empty-state { text-align: center; margin-top: 50px; opacity: 0.5; }
 .empty-icon { font-size: 3rem; display: block; margin-bottom: 10px; }
@@ -109,9 +117,15 @@ body {
 .vertical-line { width: 2px; flex: 1; background: var(--input-bg); margin-top: 8px; }
 
 .modern-card {
-    flex: 1; background: var(--bg-card); border-radius: var(--radius-m); padding: 18px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid rgba(128,128,128,0.1);
+    flex: 1; 
+    background: rgba(31, 48, 94, 0.6); 
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-radius: var(--radius-m); padding: 18px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+    border: 1px solid rgba(255,255,255,0.1);
 }
+body.light-mode .modern-card { background: rgba(255,255,255,0.7); border: 1px solid rgba(0,0,0,0.05); }
+
 .card-title { font-size: 1.1rem; font-weight: 800; margin: 5px 0; color: var(--text-main); }
 .card-subtitle { font-size: 0.85rem; color: var(--text-sec); }
 .badge { font-size: 0.65rem; padding: 3px 8px; border-radius: 5px; color: white; font-weight: 800; }
@@ -122,7 +136,7 @@ body {
     font-size: 0.8rem; display: flex; align-items: center; justify-content: center;
 }
 .btn-ios-action.primary { background: var(--text-main); color: var(--bg-body); }
-.btn-ios-action.secondary { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--input-border); }
+.btn-ios-action.secondary { background: rgba(255,255,255,0.1); color: var(--text-main); border: 1px solid var(--input-border); }
 .btn-ios-action.disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* MODAL Y FORMULARIO */
@@ -136,7 +150,7 @@ body {
 
 .ios-sheet {
     width: 100%; height: 90vh; 
-    background: var(--bg-card); /* BLANCO EN DÍA */
+    background: var(--bg-card); 
     border-radius: 24px 24px 0 0; display: flex; flex-direction: column;
     animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -188,3 +202,39 @@ input[type="time"], input[type="date"] { color-scheme: var(--input-scheme); }
 .full-width { width: 100%; }
 .btn-toggle { flex:1; padding:12px; background:var(--input-bg); border:none; color:var(--text-sec); border-radius:10px; cursor:pointer; border: 1px solid var(--input-border);}
 .btn-toggle.active { background: #3498db; color: white; border-color: #3498db;}
+
+.helper-text { font-size: 0.75rem; color: var(--text-sec); margin-top: 5px; margin-bottom: 20px; }
+
+.weather-selector { display: flex; gap: 15px; margin-bottom: 20px; }
+.weather-option {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--input-bg); border: 1px solid var(--input-border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-sec); transition: 0.2s;
+}
+.weather-option.selected {
+    background: var(--text-main); color: var(--bg-body);
+    border-color: var(--text-main); transform: scale(1.1);
+}
+
+/* SETTINGS CARD */
+.settings-card {
+    background: var(--input-bg); border: 1px solid var(--input-border);
+    border-radius: 12px; padding: 15px;
+    display: flex; align-items: center; gap: 15px;
+    cursor: pointer; margin-bottom: 25px; transition: 0.2s;
+}
+.settings-card:active { transform: scale(0.98); }
+.settings-icon { font-size: 1.5rem; color: var(--atm-red); }
+.settings-info h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; color: var(--text-main); }
+.settings-info p { font-size: 0.75rem; color: var(--text-sec); margin: 0; }
+.settings-arrow { margin-left: auto; color: var(--text-sec); }
+
+.settings-group-label { font-size: 0.7rem; font-weight: 800; color: var(--text-sec); margin-bottom: 10px; letter-spacing: 1px; }
+.settings-row { display: flex; gap: 10px; }
+.btn-settings-action {
+    flex: 1; padding: 12px; border-radius: 10px; border: none;
+    background: var(--text-main); color: var(--bg-body); font-weight: 700; font-size: 0.8rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-settings-action.secondary { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--input-border); }

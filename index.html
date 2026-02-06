@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <title>AgendaKeepers</title>
     
     <link rel="manifest" href="manifest.json">
@@ -33,6 +32,9 @@
                 </div>
             </div>
             <div class="right-controls">
+                <button class="theme-toggle" onclick="openSettings()" style="margin-right: 8px;">
+                    <i class="fas fa-cog"></i>
+                </button>
                 <button class="theme-toggle" onclick="toggleTheme()">
                     <i class="fas fa-moon" id="themeIcon"></i>
                 </button>
@@ -57,6 +59,43 @@
 
     <div class="floating-nav">
         <button id="addBtn" class="active">+</button>
+    </div>
+
+    <div id="settingsModal" class="ios-modal-overlay">
+        <div class="ios-sheet" style="height: auto; max-height: 80vh;">
+            <div class="sheet-header">
+                <div class="sheet-handle"></div>
+                <div class="sheet-controls">
+                    <span class="sheet-title">Configuración</span>
+                    <button class="btn-text save" onclick="closeSettings()">Cerrar</button>
+                </div>
+            </div>
+            <div class="sheet-body">
+                
+                <div class="settings-card" onclick="duplicateLastWeek()">
+                    <div class="settings-icon"><i class="fas fa-copy"></i></div>
+                    <div class="settings-info">
+                        <h3>Duplicar Semana Anterior</h3>
+                        <p>Copia la estructura de la semana pasada a esta.</p>
+                    </div>
+                    <div class="settings-arrow"><i class="fas fa-chevron-right"></i></div>
+                </div>
+
+                <div class="settings-group-label">COPIA DE SEGURIDAD</div>
+                
+                <div class="settings-row">
+                    <button class="btn-settings-action" onclick="exportData()">
+                        <i class="fas fa-cloud-download-alt"></i> Exportar Datos
+                    </button>
+                    <button class="btn-settings-action secondary" onclick="document.getElementById('importFile').click()">
+                        <i class="fas fa-cloud-upload-alt"></i> Importar Datos
+                    </button>
+                    <input type="file" id="importFile" style="display:none" onchange="importData(this)">
+                </div>
+
+                <div style="height: 50px;"></div>
+            </div>
+        </div>
     </div>
 
     <div id="newSessionModal" class="ios-modal-overlay">
@@ -100,14 +139,14 @@
                 </div>
 
                 <div id="tourConfig" style="display:none; margin-bottom: 15px; background: rgba(243, 156, 18, 0.1); padding: 15px; border-radius: 12px; border: 1px solid rgba(243, 156, 18, 0.3);">
-                    <label class="input-label" style="color: #f39c12;">DURACIÓN DEL TORNEO</label>
+                    <label class="input-label" style="color: #f39c12;">DURACIÓN</label>
                     <div class="row">
                         <div class="full-width">
-                            <label class="input-label">DESDE EL</label>
+                            <label class="input-label">DESDE</label>
                             <input type="date" id="tourStart" class="ios-input">
                         </div>
                         <div class="full-width">
-                            <label class="input-label">HASTA EL</label>
+                            <label class="input-label">HASTA</label>
                             <input type="date" id="tourEnd" class="ios-input">
                         </div>
                     </div>
@@ -118,40 +157,51 @@
                     <input type="text" id="inputTitle" placeholder="Ej. Velocidad de Reacción" class="ios-input">
                 </div>
 
+                <div id="locationRow" class="row">
+                    <div class="full-width">
+                        <input type="text" id="inputSub" placeholder="Ubicación (Campo/Estadio)" class="ios-input">
+                    </div>
+                    <div class="full-width">
+                        <input type="text" id="inputTeam" placeholder="Equipo (Juv A)" class="ios-input">
+                    </div>
+                </div>
+
                 <div id="meetingConfig" style="display:none; margin-bottom:15px;">
                     <div class="row">
                         <button class="btn-toggle active" id="btnPresencial" onclick="toggleMeetingMode('presencial')">Presencial</button>
                         <button class="btn-toggle" id="btnOnline" onclick="toggleMeetingMode('online')">Online</button>
                     </div>
-                    <input type="text" id="inputLink" placeholder="Enlace (Zoom, Teams, Meet...)" class="ios-input" style="display:none; margin-top:10px;">
+                    <input type="text" id="inputLink" placeholder="Enlace videollamada" class="ios-input" style="display:none; margin-top:10px;">
                 </div>
 
-                <div id="locationRow" class="row">
-                    <div class="full-width">
-                        <input type="text" id="inputSub" placeholder="Ubicación (Campo/Sala)" class="ios-input">
-                    </div>
-                    <div class="full-width">
-                        <input type="text" id="inputTeam" placeholder="Mi Equipo (ej. Juvenil A)" class="ios-input">
+                <div id="weatherSection">
+                    <label class="input-label">CLIMATOLOGÍA</label>
+                    <div class="weather-selector">
+                        <div class="weather-option selected" onclick="selectWeather(this, 'sun')" data-w="sun"><i class="fas fa-sun"></i></div>
+                        <div class="weather-option" onclick="selectWeather(this, 'cloud')" data-w="cloud"><i class="fas fa-cloud"></i></div>
+                        <div class="weather-option" onclick="selectWeather(this, 'rain')" data-w="rain"><i class="fas fa-cloud-showers-heavy"></i></div>
+                        <div class="weather-option" onclick="selectWeather(this, 'snow')" data-w="snow"><i class="fas fa-snowflake"></i></div>
+                        <div class="weather-option" onclick="selectWeather(this, 'wind')" data-w="wind"><i class="fas fa-wind"></i></div>
                     </div>
                 </div>
 
                 <div class="row" id="timeRow">
                     <div class="full-width">
-                        <label class="input-label">HORA INICIO</label>
+                        <label class="input-label">INICIO</label>
                         <input type="time" id="inputStart" value="10:00" class="ios-input">
                     </div>
                     <div class="full-width">
-                        <label class="input-label">HORA FIN</label>
+                        <label class="input-label">FIN</label>
                         <input type="time" id="inputEnd" value="11:30" class="ios-input">
                     </div>
                 </div>
 
-                <label class="input-label">ARCHIVO ADJUNTO</label>
+                <label class="input-label">DOCUMENTACIÓN (PDF/IMG)</label>
                 <div class="file-upload-box">
                     <input type="file" id="inputFile" accept="application/pdf, image/*" onchange="handleFileSelect(this)">
                     <div class="file-placeholder">
                         <i class="fas fa-cloud-upload-alt"></i>
-                        <span id="fileNameDisplay">Subir PDF / Imagen</span>
+                        <span id="fileNameDisplay">Subir Archivo</span>
                     </div>
                 </div>
 
@@ -170,11 +220,8 @@
     </div>
 
     <script>
-        // PWA REGISTRO
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log('Error SW:', err));
-            });
+            window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
         }
 
         // UTILIDADES
@@ -199,12 +246,14 @@
         let tempFileBase64 = null;
         let tempType = 'training';
         let tempColor = 'btn-of';
-        let meetingMode = 'presencial'; // Estado para reunión
+        let tempWeather = 'sun';
+        let meetingMode = 'presencial';
 
         // CARGA
         function loadState() {
             const storedEvents = localStorage.getItem('agenda_events');
             if (storedEvents) eventsDB = JSON.parse(storedEvents);
+            
             const storedTheme = localStorage.getItem('agenda_theme');
             if (storedTheme === 'light') {
                 document.body.classList.add('light-mode');
@@ -212,6 +261,7 @@
             }
             const storedView = localStorage.getItem('agenda_view');
             if (storedView) viewMode = storedView;
+            
             document.getElementById('btnWeek').classList.toggle('active', viewMode === 'week');
             document.getElementById('btnMonth').classList.toggle('active', viewMode === 'month');
         }
@@ -222,7 +272,67 @@
             localStorage.setItem('agenda_view', viewMode);
         }
 
-        // RENDERIZADO
+        // AJUSTES
+        function openSettings() { document.getElementById('settingsModal').classList.add('open'); }
+        function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
+        
+        function exportData() {
+            const dataStr = JSON.stringify(localStorage);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'AgendaKeepers_Backup.json';
+            let linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    Object.keys(data).forEach(k => localStorage.setItem(k, data[k]));
+                    alert('Datos restaurados. Recargando...');
+                    location.reload();
+                } catch(err) { alert('Error al leer el archivo.'); }
+            };
+            reader.readAsText(file);
+        }
+
+        function duplicateLastWeek() {
+            if(!confirm("¿Copiar estructura de la semana pasada?")) return;
+            const currentWeekStart = getStartOfWeek(new Date(currentDate));
+            const prevWeekStart = new Date(currentWeekStart);
+            prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+
+            for (let i = 0; i < 7; i++) {
+                let srcDate = new Date(prevWeekStart);
+                srcDate.setDate(prevWeekStart.getDate() + i);
+                let srcKey = getKeyFromDate(srcDate);
+                
+                let destDate = new Date(currentWeekStart);
+                destDate.setDate(currentWeekStart.getDate() + i);
+                let destKey = getKeyFromDate(destDate);
+
+                if (eventsDB[srcKey]) {
+                    if (!eventsDB[destKey]) eventsDB[destKey] = [];
+                    eventsDB[srcKey].forEach(ev => {
+                        let newEv = JSON.parse(JSON.stringify(ev));
+                        newEv.id = Date.now() + Math.random();
+                        eventsDB[destKey].push(newEv);
+                    });
+                }
+            }
+            saveState();
+            closeSettings();
+            renderEventsList();
+            renderDates();
+            alert("Semana duplicada.");
+        }
+
+        // RENDER
         function updateHeader() {
             const monthNames = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
             document.getElementById('currentMonthLabel').innerText = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
@@ -263,33 +373,21 @@
             let div = document.createElement('div');
             div.className = `date-item ${isSelected ? 'active' : ''}`;
             div.onclick = function() { selectDate(date); };
-            div.innerHTML = `
-                <span class="day-name">${daysNames[date.getDay()]}</span>
-                <span class="day-num">${date.getDate()}</span>
-                ${hasEvents ? '<div class="dot-indicator"></div>' : ''}
-            `;
+            div.innerHTML = `<span class="day-name">${daysNames[date.getDay()]}</span><span class="day-num">${date.getDate()}</span>${hasEvents ? '<div class="dot-indicator"></div>' : ''}`;
             container.appendChild(div);
-            if(isSelected && viewMode === 'month') {
-                setTimeout(() => div.scrollIntoView({behavior: 'smooth', inline: 'center', block: 'nearest'}), 100);
-            }
+            if(isSelected && viewMode === 'month') setTimeout(() => div.scrollIntoView({behavior: 'smooth', inline: 'center', block: 'nearest'}), 100);
         }
 
         function renderEventsList() {
             const container = document.querySelector('.agenda-feed');
             const key = getKeyFromDate(currentDate);
             const events = eventsDB[key] || [];
-
             container.innerHTML = '';
             container.classList.add('loading');
             setTimeout(() => {
                 container.classList.remove('loading');
                 if (events.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <span class="empty-icon">📅</span>
-                            <h3>Sin Actividad</h3>
-                            <p>No hay eventos programados.</p>
-                        </div>`;
+                    container.innerHTML = `<div class="empty-state"><span class="empty-icon">📅</span><h3>Sin Actividad</h3><p>No hay eventos programados.</p></div>`;
                 } else {
                     events.forEach(ev => container.innerHTML += createCardHTML(ev));
                 }
@@ -307,10 +405,17 @@
             let titleStyle = '';
             let subStyle = ''; 
             
+            const weatherIcons = {
+                'sun': '<i class="fas fa-sun" style="color:#f1c40f"></i>',
+                'cloud': '<i class="fas fa-cloud" style="color:#bdc3c7"></i>',
+                'rain': '<i class="fas fa-cloud-showers-heavy" style="color:#3498db"></i>',
+                'snow': '<i class="fas fa-snowflake" style="color:#ecf0f1"></i>',
+                'wind': '<i class="fas fa-wind" style="color:#95a5a6"></i>'
+            };
+            const weatherIcon = event.weather ? weatherIcons[event.weather] : '';
+
             let timeLeft = `<span class="time-start">${event.timeStart}</span><span class="time-end">${event.timeEnd}</span>`;
-            if (isTournament) {
-                timeLeft = `<span class="time-start" style="font-size:0.6rem; text-transform:uppercase;">DÍA</span><span class="time-end" style="font-weight:800; color:#f39c12;">TORNEO</span>`;
-            }
+            if (isTournament) timeLeft = `<span class="time-start" style="font-size:0.6rem;">DÍA</span><span class="time-end" style="color:#f39c12;">TORNEO</span>`;
 
             if (isMatch) {
                 cardStyle = 'border: 1px solid var(--atm-red); background: linear-gradient(135deg, #1C2C5B, #000);';
@@ -341,24 +446,19 @@
                 let teamColor = (isMatch || isTournament) ? '#ffffff' : 'var(--text-main)';
                 displaySub += ` • <span style="color:${teamColor}; font-weight:600;">${event.team}</span>`;
             }
+            if(weatherIcon) displaySub += ` • ${weatherIcon}`;
 
             let btns = '';
             if (event.fileData) btns += `<button class="btn-ios-action primary" onclick="openFile('${event.id}')"><span>📄 Ver PDF</span></button>`;
             else btns += `<button class="btn-ios-action primary disabled"><span>📄 No PDF</span></button>`;
             
-            // Botón editar con ID entre comillas
             btns += `<button class="btn-ios-action secondary" onclick="editEvent('${event.id}')"><span>✏️ Editar</span></button>`;
 
             return `
             <div class="agenda-card">
-                <div class="time-col">
-                    ${timeLeft}
-                    <div class="vertical-line"></div>
-                </div>
+                <div class="time-col">${timeLeft}<div class="vertical-line"></div></div>
                 <div class="card-details modern-card" style="${cardStyle}">
-                    <div class="card-header-row">
-                        <div>${badgeHTML}</div>
-                    </div>
+                    <div class="card-header-row"><div>${badgeHTML}</div></div>
                     <h3 class="card-title" style="${titleStyle}">${displayTitle}</h3>
                     <p class="card-subtitle" style="${subStyle}">${displaySub}</p>
                     <div class="card-actions">${btns}</div>
@@ -366,13 +466,8 @@
             </div>`;
         }
 
-        // --- INTERACCIONES ---
-        window.selectDate = function(date) {
-            currentDate = date;
-            updateHeader();
-            renderDates();
-            renderEventsList();
-        }
+        // INTERACCIONES
+        window.selectDate = function(date) { currentDate = date; updateHeader(); renderDates(); renderEventsList(); }
         window.changeDate = function(dir) {
             if (viewMode === 'week') currentDate.setDate(currentDate.getDate() + (dir * 7));
             else currentDate.setMonth(currentDate.getMonth() + dir);
@@ -392,9 +487,8 @@
             saveState();
         }
 
-        // --- FORMULARIO ---
+        // FORMULARIO
         const modal = document.getElementById('newSessionModal');
-
         document.getElementById('addBtn').onclick = () => {
             resetForm();
             modal.classList.add('open');
@@ -404,7 +498,7 @@
         };
         window.closeModal = () => modal.classList.remove('open');
 
-        // GESTIÓN DE TIPO Y VISIBILIDAD CAMPOS
+        // LÓGICA DE SELECCIÓN DE TIPO Y PLACEHOLDER
         window.selectType = function(el) {
             document.querySelectorAll('.segment-option').forEach(o => o.classList.remove('active'));
             el.classList.add('active');
@@ -417,7 +511,10 @@
             const colorSec = document.getElementById('colorSection');
             const locationRow = document.getElementById('locationRow');
             const timeRow = document.getElementById('timeRow');
+            const weatherSec = document.getElementById('weatherSection');
+            const inputSub = document.getElementById('inputSub');
 
+            // Reset
             matchConfig.style.display = 'none';
             tourConfig.style.display = 'none';
             titleRow.style.display = 'block';
@@ -425,7 +522,11 @@
             colorSec.style.display = 'block';
             locationRow.style.display = 'flex';
             timeRow.style.display = 'flex';
+            weatherSec.style.display = 'block';
             document.getElementById('labelTitle').innerText = "TÍTULO SESIÓN";
+            
+            // Default Placeholder
+            inputSub.placeholder = "Ubicación (Campo/Estadio)";
 
             if (tempType === 'match') {
                 matchConfig.style.display = 'block';
@@ -434,7 +535,8 @@
             } else if (tempType === 'meeting') {
                 meetConfig.style.display = 'block';
                 colorSec.style.display = 'none';
-                toggleMeetingMode('presencial'); // Inicializar reunión presencial
+                weatherSec.style.display = 'none';
+                toggleMeetingMode('presencial');
             } else if (tempType === 'tournament') {
                 tourConfig.style.display = 'block';
                 timeRow.style.display = 'none';
@@ -443,23 +545,28 @@
             }
         }
 
-        // TOGGLE REUNIÓN (CORREGIDO)
         window.toggleMeetingMode = function(mode) {
             meetingMode = mode;
             document.getElementById('btnPresencial').classList.toggle('active', mode === 'presencial');
             document.getElementById('btnOnline').classList.toggle('active', mode === 'online');
-            
             const linkInput = document.getElementById('inputLink');
             const locationRow = document.getElementById('locationRow');
+            const inputSub = document.getElementById('inputSub');
 
             if (mode === 'online') {
                 linkInput.style.display = 'block';
-                locationRow.style.display = 'none'; // Online no necesita sitio físico
+                locationRow.style.display = 'none';
             } else {
                 linkInput.style.display = 'none';
-                locationRow.style.display = 'flex'; // Presencial sí necesita sitio
-                document.getElementById('inputSub').placeholder = "Sala / Despacho";
+                locationRow.style.display = 'flex';
+                inputSub.placeholder = "Sala / Despacho"; // Placeholder específico Reunión Presencial
             }
+        }
+
+        window.selectWeather = function(el, type) {
+            document.querySelectorAll('.weather-option').forEach(d => d.classList.remove('selected'));
+            el.classList.add('selected');
+            tempWeather = type;
         }
 
         window.selectColor = function(el) {
@@ -495,39 +602,33 @@
             const event = eventsDB[key].find(e => e.id == id);
             if (!event) return;
 
-            // Rellenar datos
             document.getElementById('inputSub').value = event.subtitle || '';
             document.getElementById('inputTeam').value = event.team || '';
             document.getElementById('inputStart').value = event.timeStart;
             document.getElementById('inputEnd').value = event.timeEnd;
             document.getElementById('inputTitle').value = event.title || '';
 
-            // Seleccionar tipo
             const typeBtn = document.querySelector(`.segment-option[data-val="${event.type}"]`);
             if(typeBtn) selectType(typeBtn);
 
-            // Ajuste Editar Torneo (Ocultar fechas globales, mostrar edición local)
+            if(event.weather) {
+                const wBtn = document.querySelector(`.weather-option[data-w="${event.weather}"]`);
+                if(wBtn) selectWeather(wBtn, event.weather);
+            }
+
             if(event.type === 'tournament') {
                 document.getElementById('tourConfig').style.display = 'none';
                 document.getElementById('titleRow').style.display = 'block';
                 document.getElementById('labelTitle').innerText = "NOMBRE DEL TORNEO";
                 document.getElementById('locationRow').style.display = 'flex';
             }
-
             if (event.type === 'match') {
                 document.getElementById('inputComp').value = event.competition || 'LIGA';
                 document.getElementById('inputRival').value = event.rival || '';
             }
-
-            // Ajuste Editar Reunión
             if (event.type === 'meeting') {
-                // Detectar si era online o presencial
-                if (event.link) {
-                    toggleMeetingMode('online');
-                    document.getElementById('inputLink').value = event.link;
-                } else {
-                    toggleMeetingMode('presencial');
-                }
+                if (event.link) { toggleMeetingMode('online'); document.getElementById('inputLink').value = event.link; }
+                else toggleMeetingMode('presencial');
             }
 
             tempFileBase64 = event.fileData;
@@ -542,15 +643,9 @@
         }
 
         window.saveSession = function() {
-            // Validaciones
-            if (tempType !== 'match' && !document.getElementById('inputTitle').value) {
-                alert("Ponle un título"); return;
-            }
-            if (tempType === 'match' && !document.getElementById('inputRival').value) {
-                alert("Indica el rival"); return;
-            }
+            if (tempType !== 'match' && !document.getElementById('inputTitle').value) { alert("Ponle un título"); return; }
+            if (tempType === 'match' && !document.getElementById('inputRival').value) { alert("Indica el rival"); return; }
 
-            // CASO TORNEO MULTI-DÍA (SOLO CREACIÓN)
             if (tempType === 'tournament' && !editingId) {
                 const startStr = document.getElementById('tourStart').value;
                 const endStr = document.getElementById('tourEnd').value;
@@ -573,6 +668,7 @@
                         team: document.getElementById('inputTeam').value || '',
                         timeStart: '', timeEnd: '',
                         colorClass: 'btn-rein',
+                        weather: tempWeather,
                         fileData: tempFileBase64
                     });
                     loopDate.setDate(loopDate.getDate() + 1);
@@ -584,19 +680,14 @@
                 return;
             }
 
-            // GUARDADO ESTÁNDAR
             const key = getKeyFromDate(currentDate);
             if(!eventsDB[key]) eventsDB[key] = [];
 
-            // Preparar Subtítulo / Ubicación / Link
             let finalSubtitle = document.getElementById('inputSub').value || 'Ciudad Deportiva';
             let finalLink = null;
-
-            if (tempType === 'meeting') {
-                if (meetingMode === 'online') {
-                    finalSubtitle = "Online";
-                    finalLink = document.getElementById('inputLink').value || "#";
-                }
+            if (tempType === 'meeting' && meetingMode === 'online') {
+                finalSubtitle = "Online";
+                finalLink = document.getElementById('inputLink').value || "#";
             }
 
             const eventData = {
@@ -610,18 +701,17 @@
                 colorClass: tempColor,
                 fileData: tempFileBase64,
                 competition: document.getElementById('inputComp').value,
-                rival: document.getElementById('inputRival').value
+                rival: document.getElementById('inputRival').value,
+                weather: tempWeather
             };
 
             if (editingId) {
                 const idx = eventsDB[key].findIndex(e => e.id == editingId);
                 if (idx !== -1) {
-                    // Mantener propiedades especiales de torneo
                     if(eventsDB[key][idx].type === 'tournament') {
                         eventData.type = 'tournament';
                         eventData.colorClass = 'btn-rein'; 
-                        eventData.timeStart = ''; 
-                        eventData.timeEnd = '';
+                        eventData.timeStart = ''; eventData.timeEnd = '';
                     }
                     eventsDB[key][idx] = { ...eventData, id: editingId };
                 }
@@ -648,6 +738,9 @@
             document.getElementById('inputFile').value = "";
             tempFileBase64 = null;
             editingId = null;
+            tempWeather = 'sun';
+            document.querySelectorAll('.weather-option').forEach(d => d.classList.remove('selected'));
+            document.querySelector('.weather-option[data-w="sun"]').classList.add('selected');
         }
 
         loadState();
