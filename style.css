@@ -26,7 +26,6 @@ body.light-mode {
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; -webkit-tap-highlight-color: transparent; }
 
 body { 
-    /* FONDO VIVO ANIMADO */
     background: linear-gradient(-45deg, #111a36, #1C2C5B, #0b1124, #1a2542);
     background-size: 400% 400%;
     animation: gradient 15s ease infinite;
@@ -34,9 +33,7 @@ body {
     padding-bottom: 110px; transition: color 0.3s ease;
     overscroll-behavior-y: none;
 }
-body.light-mode {
-    background: linear-gradient(-45deg, #f2f4f8, #e6e9ef, #ffffff, #dce4f2);
-}
+body.light-mode { background: linear-gradient(-45deg, #f2f4f8, #e6e9ef, #ffffff, #dce4f2); }
 
 @keyframes gradient {
     0% { background-position: 0% 50%; }
@@ -47,11 +44,9 @@ body.light-mode {
 /* HEADER */
 .ios-header-container {
     position: sticky; top: 0; z-index: 100;
-    /* Efecto Cristal */
     background: rgba(17, 26, 54, 0.8);
     backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-    padding-top: 15px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding-top: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 body.light-mode .ios-header-container { background: rgba(255,255,255,0.85); border-bottom: 1px solid rgba(0,0,0,0.05); }
@@ -62,6 +57,17 @@ body.light-mode .ios-header-container { background: rgba(255,255,255,0.85); bord
 .app-title { font-size: 1.6rem; font-weight: 800; line-height: 1; letter-spacing: -1px; margin-bottom: 4px;}
 .date-info h2 { font-size: 1.1rem; color: var(--atm-red); font-weight: 700; text-transform: uppercase; display: inline-block; margin-right: 8px;}
 .badge-week { background: rgba(128,128,128,0.2); padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; color: var(--text-sec); vertical-align: middle; }
+
+/* CONTROLES Y WIDGET CLIMA */
+.right-controls-group { display: flex; align-items: center; gap: 12px; }
+.live-weather-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(128,128,128,0.15); padding: 6px 12px;
+    border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+}
+.live-weather-badge span { font-weight: 800; font-size: 0.9rem; }
+.live-weather-badge i { color: #f1c40f; font-size: 1rem; }
+.right-buttons { display: flex; gap: 8px; }
 
 .theme-toggle {
     background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-main);
@@ -105,7 +111,7 @@ body.light-mode .ios-header-container { background: rgba(255,255,255,0.85); bord
 .date-item.active * { color: white !important; }
 .dot-indicator { width: 5px; height: 5px; background: var(--col-of); border-radius: 50%; margin-top: 4px; }
 
-/* FEED - CARTAS DE CRISTAL */
+/* FEED */
 .agenda-feed { padding: 20px; min-height: 50vh; }
 .empty-state { text-align: center; margin-top: 50px; opacity: 0.5; }
 .empty-icon { font-size: 3rem; display: block; margin-bottom: 10px; }
@@ -139,11 +145,12 @@ body.light-mode .modern-card { background: rgba(255,255,255,0.7); border: 1px so
 .btn-ios-action.secondary { background: rgba(255,255,255,0.1); color: var(--text-main); border: 1px solid var(--input-border); }
 .btn-ios-action.disabled { opacity: 0.3; cursor: not-allowed; }
 
-/* MODAL Y FORMULARIO */
+/* --- MODAL Y FORMULARIO (CORREGIDO PARA EVITAR BLOQUEOS) --- */
 .ios-modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 2000;
-    display: none; align-items: flex-end;
+    display: none; align-items: flex-end; /* Por defecto móvil: alineado abajo */
+    justify-content: center; /* Centrado horizontal */
 }
 .ios-modal-overlay.open { display: flex; animation: fadeIn 0.3s; }
 @keyframes fadeIn { from {opacity:0} to {opacity:1}}
@@ -151,10 +158,32 @@ body.light-mode .modern-card { background: rgba(255,255,255,0.7); border: 1px so
 .ios-sheet {
     width: 100%; height: 90vh; 
     background: var(--bg-card); 
-    border-radius: 24px 24px 0 0; display: flex; flex-direction: column;
-    animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    border-radius: 24px 24px 0 0; 
+    display: flex; flex-direction: column;
+    /* Animación base móvil */
+    animation: slideUpMobile 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-@keyframes slideUp { from {transform: translateY(100%)} to {transform: translateY(0)}}
+
+@keyframes slideUpMobile { from {transform: translateY(100%)} to {transform: translateY(0)}}
+
+/* RESPONSIVE TABLET FIX (CORREGIDO) */
+@media (min-width: 768px) {
+    .ios-modal-overlay {
+        align-items: center; /* En tablet centramos verticalmente también */
+    }
+    .ios-sheet {
+        width: 500px;
+        height: auto; 
+        max-height: 85vh;
+        border-radius: 24px;
+        /* Quitamos la animación de móvil y usamos una simple de fade/scale */
+        animation: popIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    @keyframes popIn { 
+        from { opacity: 0; transform: scale(0.95); } 
+        to { opacity: 1; transform: scale(1); }
+    }
+}
 
 .sheet-header { padding: 15px 20px; border-bottom: 1px solid var(--input-bg); }
 .sheet-controls { display: flex; justify-content: space-between; align-items: center; }
@@ -205,9 +234,11 @@ input[type="time"], input[type="date"] { color-scheme: var(--input-scheme); }
 
 .helper-text { font-size: 0.75rem; color: var(--text-sec); margin-top: 5px; margin-bottom: 20px; }
 
-.weather-selector { display: flex; gap: 15px; margin-bottom: 20px; }
+/* WEATHER SELECTOR FIX TABLET */
+.weather-selector { display: flex; gap: 15px; margin-bottom: 20px; overflow-x: auto; }
 .weather-option {
-    width: 40px; height: 40px; border-radius: 50%;
+    width: 45px; height: 45px; flex-shrink: 0; /* Evita deformación */
+    border-radius: 50%;
     background: var(--input-bg); border: 1px solid var(--input-border);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; color: var(--text-sec); transition: 0.2s;
