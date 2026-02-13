@@ -160,14 +160,15 @@
                 <div id="titleRow">
                     <label class="input-label" id="labelTitle">TÍTULO SESIÓN</label>
                     <input type="text" id="inputTitle" placeholder="Ej. Velocidad de Reacción" class="ios-input">
-                    <div class="tags-scroll">
-                        <span class="smart-tag" onclick="addTag('Bloqueos')">👐 Bloqueos</span>
+                    <div class="tags-wrapper">
+                        <span class="smart-tag" onclick="addTag('Blocajes')">👐 Blocajes</span>
                         <span class="smart-tag" onclick="addTag('Desvíos')">🧤 Desvíos</span>
                         <span class="smart-tag" onclick="addTag('Aéreo')">✈️ Aéreo</span>
                         <span class="smart-tag" onclick="addTag('1vs1')">⚡ 1vs1</span>
                         <span class="smart-tag" onclick="addTag('Juego Pies')">👣 Pies</span>
                         <span class="smart-tag" onclick="addTag('Reacción')">💥 Reacción</span>
                         <span class="smart-tag" onclick="addTag('Velocidad')">🏃 Velocidad</span>
+                        <span class="smart-tag" onclick="addTag('Táctica')">🧠 Táctica</span>
                     </div>
                 </div>
 
@@ -382,7 +383,7 @@
             alert("Semana duplicada.");
         }
 
-        // --- SMART TAGS (NUEVO) ---
+        // --- SMART TAGS (SIN SCROLL) ---
         window.addTag = function(tag) {
             const input = document.getElementById('inputTitle');
             if(input.value === "") input.value = tag;
@@ -451,33 +452,26 @@
                     container.innerHTML = `<div class="empty-state"><span class="empty-icon">📅</span><h3>Sin Actividad</h3><p>No hay eventos programados.</p></div>`;
                 } else {
                     events.forEach(ev => {
-                        // Lógica Tiempo y Completado
                         ev.isCompleted = false;
                         ev.isCurrent = false;
-
                         const eventStartMins = getMinutes(ev.timeStart);
                         const eventEndMins = getMinutes(ev.timeEnd);
 
-                        // Si es HOY
                         if (isToday) {
-                            if (currentMins > eventEndMins) ev.isCompleted = true; // YA PASÓ
+                            if (currentMins > eventEndMins) ev.isCompleted = true;
                             else if (currentMins >= eventStartMins && currentMins <= eventEndMins) {
-                                ev.isCurrent = true; // ESTÁ OCURRIENDO
+                                ev.isCurrent = true;
                                 if (!timelineDrawn) timelineDrawn = true;
                             } 
                             else if (currentMins < eventStartMins && !timelineDrawn) {
-                                // Aún no ha pasado, dibujamos línea antes
                                 container.innerHTML += `<div class="time-marker-container"><div class="time-marker-badge">AHORA</div><div class="time-marker-line"></div></div>`;
                                 timelineDrawn = true;
                             }
                         } else {
-                            // Si es un día pasado, todo completado
                             if (new Date(key) < new Date(getKeyFromDate(now))) ev.isCompleted = true;
                         }
-
                         container.innerHTML += createCardHTML(ev);
                     });
-                    
                     if (isToday && !timelineDrawn) {
                          container.innerHTML += `<div class="time-marker-container"><div class="time-marker-badge">AHORA</div><div class="time-marker-line"></div></div>`;
                     }
@@ -496,12 +490,10 @@
             let titleStyle = '';
             let subStyle = ''; 
             
-            // CLASES DINÁMICAS (Completado / Actual)
             let dynamicClass = '';
             if (event.isCurrent) dynamicClass = 'card-active-now';
             if (event.isCompleted) dynamicClass = 'card-completed';
 
-            // Iconos Clima
             const weatherIcons = {
                 'sun': '<i class="fas fa-sun" style="color:#f1c40f"></i>',
                 'cloud': '<i class="fas fa-cloud" style="color:#bdc3c7"></i>',
@@ -545,7 +537,6 @@
             }
             if(weatherIcon) displaySub += ` • ${weatherIcon}`;
 
-            // Check si completado
             let checkIcon = event.isCompleted ? '<i class="fas fa-check-circle" style="color:#00ff88; float:right;"></i>' : '';
 
             let btns = '';
@@ -568,7 +559,6 @@
             </div>`;
         }
 
-        // --- WHATSAPP PERFECTO (Emojis y Formato) ---
         window.shareEvent = function(id) {
             const key = getKeyFromDate(currentDate);
             const ev = eventsDB[key].find(e => e.id == id);
@@ -580,12 +570,11 @@
             if (ev.type === 'meeting') header = "🤝 REUNIÓN ATM";
             if (ev.type === 'gym') header = "💪 GYM ATM";
 
-            // Formato Fecha
             const d = new Date(key);
             const dateStr = d.toLocaleDateString('es-ES'); 
 
             let text = `${header}\n\n`;
-            text += `🧤 *Portero:* Porteros ATM\n`; // Genérico o configurable si añadieramos porteros
+            text += `🧤 *Portero:* Porteros ATM\n`; 
             text += `👥 *Equipo:* ${ev.team || 'Todos'}\n`;
             text += `📝 *Motivo:* ${ev.title}\n`;
             text += `🏟️ *Sede:* ${ev.subtitle || 'Ciudad Deportiva'}\n`;

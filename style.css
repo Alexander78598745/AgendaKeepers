@@ -212,11 +212,15 @@ input[type="time"], input[type="date"] { color-scheme: var(--input-scheme); }
 .segment-option:nth-child(4), .segment-option:nth-child(5) { grid-column: span 3; }
 .segment-option.active { background: var(--text-main); color: var(--bg-body); border-color: var(--text-main); }
 
-/* TAGS */
-.tags-scroll { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; padding-bottom: 5px; scrollbar-width: none;}
+/* TAGS - SIN SCROLL (WRAP) */
+.tags-wrapper {
+    display: flex; flex-wrap: wrap; gap: 10px; /* Wrap para salto de línea */
+    margin-top: 10px; margin-bottom: 25px;
+}
 .smart-tag {
-    background: rgba(128,128,128,0.15); padding: 6px 12px; border-radius: 20px;
-    font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap; border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(128,128,128,0.15); padding: 10px 15px; border-radius: 20px;
+    font-size: 0.8rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+    border: 1px solid rgba(255,255,255,0.1); transition: 0.2s;
 }
 .smart-tag:active { background: var(--text-main); color: var(--bg-body); }
 
