@@ -129,14 +129,13 @@ body.light-mode .ios-header-container { background: rgba(255,255,255,0.85); bord
     border-radius: var(--radius-m); padding: 18px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
     border: 1px solid rgba(255,255,255,0.1);
+    transition: 0.3s;
 }
 body.light-mode .modern-card { background: rgba(255,255,255,0.7); border: 1px solid rgba(0,0,0,0.05); }
 
-/* ESTILO ACTIVO AHORA */
-.card-active-now {
-    border: 2px solid var(--atm-red) !important;
-    box-shadow: 0 0 15px rgba(203, 53, 36, 0.3) !important;
-}
+/* ESTADO COMPLETADO Y ACTIVO */
+.card-completed { opacity: 0.6; filter: grayscale(30%); }
+.card-active-now { border: 2px solid var(--atm-red) !important; box-shadow: 0 0 15px rgba(203, 53, 36, 0.3) !important; }
 
 .card-title { font-size: 1.1rem; font-weight: 800; margin: 5px 0; color: var(--text-main); }
 .card-subtitle { font-size: 0.85rem; color: var(--text-sec); }
@@ -152,17 +151,10 @@ body.light-mode .modern-card { background: rgba(255,255,255,0.7); border: 1px so
 .btn-ios-action.whatsapp { flex: 0 0 50px; background: #25D366; color: white; font-size: 1.2rem; }
 .btn-ios-action.disabled { opacity: 0.3; cursor: not-allowed; }
 
-/* LINEA DE TIEMPO AHORA */
-.time-marker-container {
-    display: flex; align-items: center; gap: 10px; margin: 15px 0;
-}
-.time-marker-badge {
-    background: var(--atm-red); color: white; padding: 2px 8px; 
-    border-radius: 4px; font-size: 0.65rem; font-weight: 800;
-}
-.time-marker-line {
-    flex: 1; height: 2px; background: var(--atm-red); opacity: 0.5;
-}
+/* LINEA DE TIEMPO */
+.time-marker-container { display: flex; align-items: center; gap: 10px; margin: 15px 0; }
+.time-marker-badge { background: var(--atm-red); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; }
+.time-marker-line { flex: 1; height: 2px; background: var(--atm-red); opacity: 0.5; }
 
 /* MODAL Y FORMULARIO */
 .ios-modal-overlay {
@@ -175,15 +167,12 @@ body.light-mode .modern-card { background: rgba(255,255,255,0.7); border: 1px so
 
 .ios-sheet {
     width: 100%; height: 90vh; 
-    background: var(--bg-card); 
-    border-radius: 24px 24px 0 0; 
+    background: var(--bg-card); border-radius: 24px 24px 0 0; 
     display: flex; flex-direction: column;
     animation: slideUpMobile 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-
 @keyframes slideUpMobile { from {transform: translateY(100%)} to {transform: translateY(0)}}
 
-/* RESPONSIVE TABLET FIX */
 @media (min-width: 768px) {
     .ios-modal-overlay { align-items: center; }
     .ios-sheet {
@@ -212,10 +201,8 @@ input[type="time"], input[type="date"] { color-scheme: var(--input-scheme); }
 
 .input-label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--text-sec); margin-bottom: 8px; }
 
-/* NUEVO GRID DE ACTIVIDADES */
-.segment-grid {
-    display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px;
-}
+/* GRID ACTIVIDADES */
+.segment-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; }
 .segment-option {
     padding: 12px 5px; background: var(--input-bg); border-radius: 16px;
     color: var(--text-sec); font-weight: 600; cursor: pointer; border: 1px solid var(--input-border);
@@ -224,6 +211,14 @@ input[type="time"], input[type="date"] { color-scheme: var(--input-scheme); }
 .segment-option:nth-child(1), .segment-option:nth-child(2), .segment-option:nth-child(3) { grid-column: span 2; }
 .segment-option:nth-child(4), .segment-option:nth-child(5) { grid-column: span 3; }
 .segment-option.active { background: var(--text-main); color: var(--bg-body); border-color: var(--text-main); }
+
+/* TAGS */
+.tags-scroll { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; padding-bottom: 5px; scrollbar-width: none;}
+.smart-tag {
+    background: rgba(128,128,128,0.15); padding: 6px 12px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap; border: 1px solid rgba(255,255,255,0.1);
+}
+.smart-tag:active { background: var(--text-main); color: var(--bg-body); }
 
 .file-upload-box {
     border: 2px dashed var(--text-sec); border-radius: 12px; padding: 20px;
@@ -248,20 +243,14 @@ input[type="time"], input[type="date"] { color-scheme: var(--input-scheme); }
 
 .helper-text { font-size: 0.75rem; color: var(--text-sec); margin-top: 5px; margin-bottom: 20px; }
 
-/* WEATHER SELECTOR FIX (SPACE BETWEEN - NO SCROLL - COLOR) */
-.weather-selector { 
-    display: flex; justify-content: space-between; 
-    margin-bottom: 20px; 
-}
+/* WEATHER (SPACE-BETWEEN & COLORS) */
+.weather-selector { display: flex; justify-content: space-between; margin-bottom: 20px; }
 .weather-option {
-    width: 45px; height: 45px; flex-shrink: 0; 
-    border-radius: 50%;
+    width: 45px; height: 45px; flex-shrink: 0; border-radius: 50%;
     background: var(--input-bg); border: 1px solid var(--input-border);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; color: var(--text-sec); transition: 0.2s;
 }
-
-/* COLORES ESPECÍFICOS DE CLIMA AL SELECCIONAR */
 .weather-option.selected { transform: scale(1.1); color: white; border: none; }
 .weather-option[data-w="sun"].selected { background: #f1c40f; box-shadow: 0 0 10px #f1c40f80; }
 .weather-option[data-w="cloud"].selected { background: #7f8c8d; box-shadow: 0 0 10px #7f8c8d80; }

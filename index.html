@@ -35,7 +35,7 @@
             <div class="right-controls-group">
                 <div id="liveWeather" class="live-weather-badge" style="display:none;">
                     <span id="liveTemp">--°</span>
-                    <i id="liveIcon" class="fas fa-spinner"></i>
+                    <i id="liveIcon" class="fas fa-spinner fa-spin"></i>
                 </div>
 
                 <div class="right-buttons">
@@ -160,6 +160,15 @@
                 <div id="titleRow">
                     <label class="input-label" id="labelTitle">TÍTULO SESIÓN</label>
                     <input type="text" id="inputTitle" placeholder="Ej. Velocidad de Reacción" class="ios-input">
+                    <div class="tags-scroll">
+                        <span class="smart-tag" onclick="addTag('Bloqueos')">👐 Bloqueos</span>
+                        <span class="smart-tag" onclick="addTag('Desvíos')">🧤 Desvíos</span>
+                        <span class="smart-tag" onclick="addTag('Aéreo')">✈️ Aéreo</span>
+                        <span class="smart-tag" onclick="addTag('1vs1')">⚡ 1vs1</span>
+                        <span class="smart-tag" onclick="addTag('Juego Pies')">👣 Pies</span>
+                        <span class="smart-tag" onclick="addTag('Reacción')">💥 Reacción</span>
+                        <span class="smart-tag" onclick="addTag('Velocidad')">🏃 Velocidad</span>
+                    </div>
                 </div>
 
                 <div id="locationRow" class="row">
@@ -229,13 +238,12 @@
             window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
         }
 
-        // --- GESTIÓN CLIMA AUTOMÁTICO ---
+        // --- CLIMA ---
         function updateWeatherUI(temp, code) {
             let iconClass = 'fa-sun';
             if (code > 3) iconClass = 'fa-cloud';
             if (code > 50) iconClass = 'fa-cloud-showers-heavy';
             if (code > 70) iconClass = 'fa-snowflake';
-
             const widget = document.getElementById('liveWeather');
             document.getElementById('liveTemp').innerText = `${temp}°`;
             document.getElementById('liveIcon').className = `fas ${iconClass}`;
@@ -374,6 +382,13 @@
             alert("Semana duplicada.");
         }
 
+        // --- SMART TAGS (NUEVO) ---
+        window.addTag = function(tag) {
+            const input = document.getElementById('inputTitle');
+            if(input.value === "") input.value = tag;
+            else input.value += " + " + tag;
+        }
+
         function updateHeader() {
             const monthNames = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
             document.getElementById('currentMonthLabel').innerText = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
@@ -436,20 +451,33 @@
                     container.innerHTML = `<div class="empty-state"><span class="empty-icon">📅</span><h3>Sin Actividad</h3><p>No hay eventos programados.</p></div>`;
                 } else {
                     events.forEach(ev => {
-                        if (isToday && !timelineDrawn) {
-                            const eventStartMins = getMinutes(ev.timeStart);
-                            const eventEndMins = getMinutes(ev.timeEnd);
-                            
-                            if (currentMins >= eventStartMins && currentMins <= eventEndMins) {
-                                ev.isCurrent = true;
-                                timelineDrawn = true;
-                            } else if (currentMins < eventStartMins) {
+                        // Lógica Tiempo y Completado
+                        ev.isCompleted = false;
+                        ev.isCurrent = false;
+
+                        const eventStartMins = getMinutes(ev.timeStart);
+                        const eventEndMins = getMinutes(ev.timeEnd);
+
+                        // Si es HOY
+                        if (isToday) {
+                            if (currentMins > eventEndMins) ev.isCompleted = true; // YA PASÓ
+                            else if (currentMins >= eventStartMins && currentMins <= eventEndMins) {
+                                ev.isCurrent = true; // ESTÁ OCURRIENDO
+                                if (!timelineDrawn) timelineDrawn = true;
+                            } 
+                            else if (currentMins < eventStartMins && !timelineDrawn) {
+                                // Aún no ha pasado, dibujamos línea antes
                                 container.innerHTML += `<div class="time-marker-container"><div class="time-marker-badge">AHORA</div><div class="time-marker-line"></div></div>`;
                                 timelineDrawn = true;
                             }
+                        } else {
+                            // Si es un día pasado, todo completado
+                            if (new Date(key) < new Date(getKeyFromDate(now))) ev.isCompleted = true;
                         }
+
                         container.innerHTML += createCardHTML(ev);
                     });
+                    
                     if (isToday && !timelineDrawn) {
                          container.innerHTML += `<div class="time-marker-container"><div class="time-marker-badge">AHORA</div><div class="time-marker-line"></div></div>`;
                     }
@@ -467,8 +495,13 @@
             let cardStyle = '';
             let titleStyle = '';
             let subStyle = ''; 
-            let activeClass = event.isCurrent ? 'card-active-now' : '';
+            
+            // CLASES DINÁMICAS (Completado / Actual)
+            let dynamicClass = '';
+            if (event.isCurrent) dynamicClass = 'card-active-now';
+            if (event.isCompleted) dynamicClass = 'card-completed';
 
+            // Iconos Clima
             const weatherIcons = {
                 'sun': '<i class="fas fa-sun" style="color:#f1c40f"></i>',
                 'cloud': '<i class="fas fa-cloud" style="color:#bdc3c7"></i>',
@@ -512,6 +545,9 @@
             }
             if(weatherIcon) displaySub += ` • ${weatherIcon}`;
 
+            // Check si completado
+            let checkIcon = event.isCompleted ? '<i class="fas fa-check-circle" style="color:#00ff88; float:right;"></i>' : '';
+
             let btns = '';
             btns += `<button class="btn-ios-action whatsapp" onclick="shareEvent('${event.id}')"><i class="fab fa-whatsapp"></i></button>`;
             
@@ -523,8 +559,8 @@
             return `
             <div class="agenda-card">
                 <div class="time-col">${timeLeft}<div class="vertical-line"></div></div>
-                <div class="card-details modern-card ${activeClass}" style="${cardStyle}">
-                    <div class="card-header-row"><div>${badgeHTML}</div></div>
+                <div class="card-details modern-card ${dynamicClass}" style="${cardStyle}">
+                    <div class="card-header-row"><div>${badgeHTML}</div> ${checkIcon}</div>
                     <h3 class="card-title" style="${titleStyle}">${displayTitle}</h3>
                     <p class="card-subtitle" style="${subStyle}">${displaySub}</p>
                     <div class="card-actions">${btns}</div>
@@ -532,38 +568,32 @@
             </div>`;
         }
 
-        // --- COMPARTIR WHATSAPP CORREGIDO Y FORMATEADO ---
+        // --- WHATSAPP PERFECTO (Emojis y Formato) ---
         window.shareEvent = function(id) {
             const key = getKeyFromDate(currentDate);
             const ev = eventsDB[key].find(e => e.id == id);
             if(!ev) return;
 
-            // ENCABEZADO SEGÚN TIPO
             let header = "⚽ AGENDA PORTEROS ATM";
             if (ev.type === 'match') header = "🏟️ PARTIDO ATM";
-            else if (ev.type === 'tournament') header = "🏆 TORNEO ATM";
-            else if (ev.type === 'meeting') header = "🤝 REUNIÓN ATM";
-            else if (ev.type === 'gym') header = "💪 GYM ATM";
+            if (ev.type === 'tournament') header = "🏆 TORNEO ATM";
+            if (ev.type === 'meeting') header = "🤝 REUNIÓN ATM";
+            if (ev.type === 'gym') header = "💪 GYM ATM";
 
-            // FECHA LOCAL
+            // Formato Fecha
             const d = new Date(key);
-            const dateOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-            let dateStr = d.toLocaleDateString('es-ES', dateOptions);
-            dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+            const dateStr = d.toLocaleDateString('es-ES'); 
 
-            // CONSTRUCCIÓN DEL MENSAJE (SIN INTERROGANTES)
-            let text = `*${header}*\n\n`;
-            text += `👥 *Equipo:* ${ev.team || 'No especificado'}\n`;
-            text += `📝 *Tarea:* ${ev.title}\n`;
-            
-            if(ev.type === 'match' && ev.rival) text += `⚔️ *Rival:* ${ev.rival}\n`;
-            
+            let text = `${header}\n\n`;
+            text += `🧤 *Portero:* Porteros ATM\n`; // Genérico o configurable si añadieramos porteros
+            text += `👥 *Equipo:* ${ev.team || 'Todos'}\n`;
+            text += `📝 *Motivo:* ${ev.title}\n`;
             text += `🏟️ *Sede:* ${ev.subtitle || 'Ciudad Deportiva'}\n`;
             text += `📅 *Fecha:* ${dateStr}\n`;
             text += `⏰ *Hora:* ${ev.timeStart} - ${ev.timeEnd}\n`;
 
             if(ev.weather) {
-                const wMap = { 'sun': '☀️ Soleado', 'cloud': '☁️ Nublado', 'rain': '🌧️ Lluvia', 'snow': '❄️ Nieve', 'wind': '💨 Viento' };
+                const wMap = { 'sun': '☀️ Sol', 'cloud': '☁️ Nubes', 'rain': '🌧️ Lluvia', 'snow': '❄️ Nieve', 'wind': '💨 Viento' };
                 if(wMap[ev.weather]) text += `🌦 *Clima:* ${wMap[ev.weather]}\n`;
             }
 
